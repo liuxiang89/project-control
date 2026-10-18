@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="pdz2ARqkHi3QYnkIAzw5P4">
+<head data-page-node-id="OIuwcADEhPX3Y5HEjhhaNS">
+<meta charset="UTF-8" data-page-node-id="p7ffIK4YjsJASrPvESEtlG">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="zA87tgHZIivI4t1HsQwzIo">
+<title>项目管理工作台</title>
+<style>
+  :root {
+    --bg: #FFF7EE;            /* 奶油底 */
+    --card: #FFFFFF;
+    --line: #FFE8D6;          /* 暖色卡片边框 */
+    --line-2: #F2E3D2;        /* 暖色分割线 */
+    --text: #3A3238;
+    --muted: #9A8A80;
+    --faint: #C2B4A8;
+    --accent: #FF6B9D;        /* 多巴胺粉 */
+    --danger: #FF5C5C;
+    --hl: #FFE9F0;            /* 高亮粉 */
+    --cal-bg: #FFF1E6;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", -apple-system, "Segoe UI", sans-serif;
+    background: var(--bg); color: var(--text);
+    font-size: 14px; line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font-family: inherit; }
+
+  .app { display: flex; max-width: 1440px; margin: 0 auto; min-height: 100vh; }
+
+  /* ============ 侧栏 ============ */
+  .sidebar {
+    width: 240px; flex: none; background: var(--bg);
+    border-right: 1px solid var(--line-2); padding: 22px 16px;
+    display: flex; flex-direction: column; gap: 20px;
+    position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  }
+  .logo { display: flex; align-items: center; gap: 9px; padding: 0 4px; }
+  .logo-mark {
+    width: 30px; height: 30px; border-radius: var(--radius); flex: none;
+    background: linear-gradient(135deg, #FF6B9D, #FF8A3D); color: #fff; font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-name { font-weight: 600; font-size: 14px; }
+  .logo-sub { font-size: 11px; color: var(--faint); }
+
+  .nav-label { font-size: 11px; color: var(--faint); padding: 0 4px; margin-bottom: 6px; }
+  .nav { display: flex; flex-direction: column; gap: 2px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 8px; padding: 7px 8px;
+    border-radius: var(--radius); cursor: pointer; font-size: 13.5px; color: var(--muted);
+    transition: background .14s;
+  }
+  .nav-item .nicon { width: 18px; text-align: center; font-size: 13px; }
+  .nav-item[data-view="kanban"] .nicon { color: #FF6B9D; }
+  .nav-item[data-view="gantt"] .nicon { color: #6BCB77; }
+  .nav-item[data-view="calendar"] .nicon { color: #4CC9F0; }
+  .nav-item:hover { background: var(--hl); color: var(--text); }
+  .nav-item.active { background: #FFE9F0; color: #FF6B9D; font-weight: 600; }
+
+  .ip-list { display: flex; flex-direction: column; gap: 2px; }
+  .ip-item {
+    display: flex; align-items: center; gap: 8px; padding: 6px 8px;
+    border-radius: var(--radius); cursor: pointer; transition: background .14s;
+  }
+  .ip-item:hover { background: var(--hl); }
+  .ip-item .bar { width: 4px; height: 24px; border-radius: 2px; flex: none; }
+  .ip-item .info { flex: 1; min-width: 0; }
+  .ip-item .nm { font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ip-item .dt { font-size: 10.5px; color: var(--faint); }
+  .badge { font-size: 10px; padding: 1px 7px; border-radius: var(--radius); color: #fff; flex: none; white-space: nowrap; }
+  .ip-item .del {
+    width: 16px; height: 16px; flex: none; border-radius: 4px; border: none; background: transparent;
+    color: var(--faint); cursor: pointer; font-size: 14px; line-height: 1; padding: 0; opacity: 0; transition: .14s;
+  }
+  .ip-item:hover .del { opacity: 1; }
+  .ip-item .del:hover { color: var(--danger); background: var(--hl); }
+  .toggle-btn {
+    width: 20px; height: 20px; border-radius: 4px; border: 1px solid var(--line-2); background: #fff;
+    cursor: pointer; font-size: 12px; color: var(--muted); line-height: 1;
+  }
+  .toggle-btn:hover { background: var(--hl); }
+  .add-btn {
+    width: 100%; margin-top: 6px; padding: 7px; border: 1px dashed var(--line-2); border-radius: var(--radius);
+    background: transparent; color: var(--muted); font-size: 12.5px; cursor: pointer; transition: .14s;
+  }
+  .add-btn:hover { color: var(--accent); background: #FFF0F6; }
+
+  .tools { border-top: 1px solid var(--line-2); padding-top: 14px; display: flex; gap: 8px; }
+  .tools button {
+    flex: 1; height: 32px; border: 1px solid var(--line-2); border-radius: var(--radius); background: #fff;
+    cursor: pointer; font-size: 12px; color: var(--muted); transition: .14s;
+  }
+  .tools button:hover { background: #FFF0F6; color: var(--accent); }
+  .autosave-note { font-size: 11px; color: var(--faint); text-align: center; margin-top: 2px; }
+
+  /* ============ 主内容 ============ */
+  .main { flex: 1; min-width: 0; padding: 24px 28px 48px; }
+  .view { display: flex; flex-direction: column; gap: 16px; }
+
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 18px 20px;
+  }
+  .card h2 { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+  .card h2 .tag { font-size: 11px; font-weight: 400; color: var(--muted); }
+  .dot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+
+  /* ============ 阶段看板 ============ */
+  .kanban { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; align-items: start; }
+  .kb-col { background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px; min-height: 120px; }
+  .kb-col.dragover { border-color: var(--accent); background: #FFE9F0; }
+  .kb-col h3 { font-size: 12.5px; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 7px; }
+  .kb-col .cnt { font-size: 11px; color: var(--muted); font-weight: 400; margin-left: auto; }
+  .kb-card {
+    background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 10px 11px; margin-bottom: 8px; cursor: pointer; transition: background .14s, box-shadow .14s, transform .14s;
+  }
+  .kb-card:hover { background: #FCFCFB; box-shadow: 0 2px 8px rgba(0,0,0,.05); }
+  .kb-card.dragging { opacity: .4; cursor: grabbing; }
+  .kb-card .kc-top { display: flex; align-items: center; gap: 7px; }
+  .kb-card .kc-cat { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+  .kb-card .kc-name { font-size: 13px; font-weight: 600; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .kb-card .kc-deadline { font-size: 11px; color: var(--muted); margin-top: 7px; }
+  .kb-card .kc-next { font-size: 11.5px; color: var(--text); margin-top: 3px; display: flex; gap: 5px; align-items: flex-start; }
+  .kb-card .kc-next .pin { flex: none; }
+  .kb-card .urgent { display: inline-block; font-size: 10px; font-weight: 600; color: #fff; background: var(--danger); border-radius: 4px; padding: 1px 6px; margin-left: 6px; }
+  .kb-card .st-tag { font-size: 9.5px; padding: 1px 6px; border-radius: 4px; color: #fff; flex: none; }
+  .kb-card .kb-prog { margin-top: 9px; }
+  .kb-card .kb-prog .pr-head { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--muted); margin-bottom: 3px; }
+  .kb-card .kb-prog .pr-bar { height: 5px; border-radius: 3px; background: #FFEBDD; overflow: hidden; }
+  .kb-card .kb-prog .pr-fill { height: 100%; border-radius: 3px; }
+  .empty { font-size: 12px; color: var(--faint); text-align: center; padding: 14px 0; }
+
+  /* ============ 甘特图 ============ */
+  .gantt-wrap { overflow: hidden; cursor: grab; }
+  .gantt-wrap.grabbing { cursor: grabbing; }
+  .gantt { display: inline-block; min-width: 100%; }
+  .g-head { display: flex; border-bottom: 1px solid var(--line-2); }
+  .g-corner { width: 150px; flex: none; font-size: 12px; font-weight: 600; color: var(--muted); padding: 7px 8px 7px 0; background: var(--card); position: sticky; left: 0; z-index: 5; border-right: 1px solid var(--line-2); }
+  .g-head-right { position: relative; flex: none; }
+  .g-months-row { position: relative; height: 24px; }
+  .g-months-row .mc { position: absolute; top: 4px; height: 16px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--muted); background: var(--bg); border-radius: 4px; }
+  .g-days-row { position: relative; height: 36px; border-bottom: 1px solid var(--line-2); }
+  .g-days-row .dcell { position: absolute; top: 3px; text-align: center; }
+  .g-days-row .dcell .dnum { font-size: 11px; font-weight: 600; color: var(--text); line-height: 1.2; }
+  .g-days-row .dcell .dweek { font-size: 9px; color: var(--faint); line-height: 1.2; }
+  .g-days-row .dcell.wknd .dnum, .g-days-row .dcell.wknd .dweek { color: #F2A6B8; }
+  .g-days-row .dcell.today-d { background: var(--accent); border-radius: 4px; }
+  .g-days-row .dcell.today-d .dnum, .g-days-row .dcell.today-d .dweek { color: #fff; }
+  .g-body { position: relative; }
+  .g-gridlines { position: absolute; top: 0; bottom: 0; left: 0; right: 0; pointer-events: none; z-index: 0; }
+  .g-gridlines .wk { position: absolute; top: 0; bottom: 0; background: var(--cal-bg); }
+  .g-gridlines .vl { position: absolute; top: 0; bottom: 0; border-left: 1px solid #FFEBDD; }
+  .g-row { display: flex; height: 42px; position: relative; z-index: 1; }
+  .g-name { width: 150px; flex: none; display: flex; flex-direction: column; justify-content: center; padding-right: 8px; background: var(--card); position: sticky; left: 0; z-index: 3; border-right: 1px solid var(--line-2); cursor: pointer; }
+  .g-name .nm { font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .g-name .st { font-size: 10px; margin-top: 1px; }
+  .g-timeline { position: relative; flex: none; }
+  .g-track { position: absolute; top: 50%; transform: translateY(-50%); height: 14px; border-radius: 4px; }
+  .g-bar { position: absolute; top: 50%; transform: translateY(-50%); height: 14px; border-radius: 4px; }
+  .g-ms { position: absolute; top: 50%; transform: translate(-50%,-50%); z-index: 4; cursor: default; }
+  .dms { width: 9px; height: 9px; display: block; margin: 0 auto; transform: rotate(45deg); border-radius: 2px; }
+  .dms.done { background: #6BCB77; border: 1.5px solid #6BCB77; }
+  .dms.todo { background: #fff; border: 1.5px solid #6BCB77; }
+  .g-ms .mlabel { position: absolute; left: 50%; transform: translateX(-50%); font-size: 9.5px; color: var(--muted); white-space: nowrap; background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; line-height: 1.4; }
+  .g-dot { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 6px; height: 6px; border-radius: 50%; z-index: 3; border: 1.5px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
+  .g-dot.dot-done { opacity: .55; }
+  .g-dot.dot-log { width: 4px; height: 4px; }
+  .g-today { position: absolute; top: 0; bottom: 0; border-left: 2px solid var(--danger); z-index: 2; pointer-events: none; }
+  .g-today .tlabel { position: absolute; top: 0; left: 4px; font-size: 10px; color: var(--danger); font-weight: 600; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 12px; font-size: 12px; color: var(--muted); }
+  .legend .li { display: flex; align-items: center; gap: 6px; }
+  .legend .swatch { width: 16px; height: 8px; border-radius: 3px; display: inline-block; }
+
+  /* ============ 月历 ============ */
+  .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .cal-nav { display: flex; align-items: center; gap: 8px; }
+  .cal-nav button { border: 1px solid var(--line-2); background: #fff; border-radius: 4px; width: 30px; height: 30px; cursor: pointer; font-size: 14px; color: var(--text); }
+  .cal-nav button:hover { background: var(--hl); }
+  .cal-nav .mon { font-size: 15px; font-weight: 600; min-width: 120px; text-align: center; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .cal-grid .wd { text-align: center; font-size: 11.5px; color: var(--muted); padding: 4px 0 6px; font-weight: 500; }
+  .cal-cell { min-height: 96px; border: 1px solid var(--line-2); border-radius: 10px; padding: 6px 7px; background: #fff; overflow: hidden; }
+  .cal-cell.out { background: #FAF9F6; opacity: .6; }
+  .cal-cell .dnum { font-size: 12.5px; color: var(--muted); margin-bottom: 3px; }
+  .cal-cell.today { border: 1.5px solid #FF8A3D; box-shadow: 0 2px 8px rgba(255,138,61,.15); }
+  .cal-cell.today .dnum { display: inline-flex; width: 21px; height: 21px; border-radius: 6px; background: #FF8A3D; color: #fff; align-items: center; justify-content: center; font-weight: 600; }
+  .ev { display: flex; align-items: center; font-size: 10px; color: var(--text); border-radius: 5px; padding: 2px 5px 2px 6px; margin-top: 3px; white-space: nowrap; overflow: hidden; font-weight: 500; border-left: 3px solid transparent; cursor: pointer; }
+  .ev:hover { filter: brightness(.96); }
+  .ev .ev-t { overflow: hidden; text-overflow: ellipsis; }
+  .ev span.ic { margin-right: 3px; flex: none; }
+  .more { font-size: 10px; color: #FF8A3D; margin-top: 3px; cursor: pointer; font-weight: 500; }
+  .more:hover { text-decoration: underline; }
+  .cal-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line-2); }
+  .cal-legend .lg { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--muted); }
+  .cal-legend .lg i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+
+  /* 事件展开浮层 */
+  .ev-pop-mask { position: fixed; inset: 0; background: rgba(60,55,50,.28); z-index: 90; display: flex; align-items: center; justify-content: center; }
+  .ev-pop { background: #fff; border-radius: 14px; width: min(420px, 88vw); max-height: 70vh; overflow: auto; padding: 16px 18px; box-shadow: 0 12px 40px rgba(0,0,0,.14); }
+  .ev-pop-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .ev-pop-head .pd { font-size: 14.5px; font-weight: 600; color: var(--text); }
+  .ev-pop-head button { border: none; background: var(--bg); width: 26px; height: 26px; border-radius: 50%; cursor: pointer; font-size: 14px; color: var(--muted); }
+  .ev-pop-item { display: flex; gap: 8px; padding: 8px 10px; border-radius: 8px; background: var(--bg); margin-bottom: 6px; border-left: 3px solid transparent; cursor: pointer; transition: background .12s, transform .12s; }
+  .ev-pop-item:hover { background: #F5F3EF; transform: translateX(2px); }
+  .ev-pop-item .pi { flex: none; font-size: 13px; }
+  .ev-pop-item .pt { font-size: 12.5px; color: var(--text); line-height: 1.5; word-break: break-word; }
+  .ev-pop-item .pp { font-size: 10.5px; color: var(--faint); margin-top: 2px; }
+
+  .dist-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .dist-row:last-child { margin-bottom: 0; }
+  .dist-row .dn { width: 200px; flex: none; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dist-track { flex: 1; height: 12px; background: #F0EFEA; border-radius: 3px; overflow: hidden; }
+  .dist-fill { height: 100%; border-radius: 3px; }
+  .dist-days { flex: none; width: 44px; font-size: 11px; color: var(--muted); text-align: right; }
+
+  /* ============ 详情 ============ */
+  .detail-top { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+  .detail-top .detail-head { flex: 1; min-width: 0; }
+  .back-btn { height: 30px; padding: 0 12px; border-radius: 4px; border: 1px solid var(--line-2); background: #fff; cursor: pointer; font-size: 12.5px; color: var(--muted); flex: none; }
+  .back-btn:hover { background: var(--hl); color: var(--text); }
+  .detail-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; align-items: start; }
+  .detail-left, .detail-right { display: flex; flex-direction: column; gap: 10px; }
+  .sec-title { font-size: 12px; font-weight: 600; color: var(--muted); margin-top: 4px; }
+  .stage-switch { display: flex; flex-wrap: wrap; gap: 6px; }
+  .stage-btn { border: 1px solid var(--line-2); background: #fff; border-radius: 4px; padding: 4px 11px; cursor: pointer; font-size: 12px; color: var(--muted); transition: .14s; }
+  .stage-btn.on { color: #fff; border-color: transparent; }
+  .tl { position: relative; padding-left: 18px; }
+  .tl::before { content: ""; position: absolute; left: 4px; top: 6px; bottom: 6px; width: 1px; background: var(--line-2); }
+  .tl-item { position: relative; padding: 4px 0 8px; }
+  .tl-item::before { content: ""; position: absolute; left: -18px; top: 10px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); border: 2px solid #fff; box-shadow: 0 0 0 1px var(--line-2); }
+  .tl-item .tl-top { display: flex; align-items: center; gap: 4px; }
+  .tl-item .tl-date { font-size: 11px; color: var(--faint); }
+  .tl-item .tl-type { display: inline-block; font-size: 10px; padding: 0 6px; border-radius: 4px; background: var(--bg); color: var(--muted); margin-left: 4px; }
+  .tl-item .tl-text { font-size: 12.5px; color: var(--text); margin-top: 2px; line-height: 1.5; word-break: break-word; }
+  .tl-item .todo-check input { width: 14px; height: 14px; }
+  .tl-item.done .tl-text { text-decoration: line-through; color: var(--faint); }
+  .tl-item.done::before { background: #6BCB77; }
+  .todo-item { display: flex; align-items: center; gap: 8px; padding: 6px 2px; border-bottom: 1px dashed var(--line-2); }
+  .todo-item:last-child { border-bottom: none; }
+  .todo-check { flex: none; display: flex; }
+  .todo-check input { width: 15px; height: 15px; accent-color: #6BCB77; cursor: pointer; }
+  .todo-line { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 6px; }
+  .todo-line .tt { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .todo-line .td { font-size: 11px; color: var(--faint); flex: none; }
+  .todo-item.done .tt { text-decoration: line-through; color: var(--faint); }
+  .ia-group { display: flex; gap: 2px; flex: none; opacity: 0; transition: opacity .15s; }
+  .todo-item:hover .ia-group, .tl-item:hover .ia-group { opacity: 1; }
+  .ia { width: 20px; height: 20px; border: none; background: transparent; border-radius: 4px; cursor: pointer; font-size: 12px; color: var(--faint); line-height: 1; padding: 0; }
+  .ia:hover { background: var(--hl); color: var(--accent); }
+  .ia.del:hover { background: #FFE9E6; color: var(--danger); }
+  .mini-btn { height: 24px; padding: 0 9px; border: 1px solid var(--line-2); background: #fff; border-radius: 4px; cursor: pointer; font-size: 11px; color: var(--muted); }
+  .mini-btn.ok { background: var(--accent); color: #fff; border: none; }
+  .mini-btn:hover { background: var(--hl); color: var(--text); }
+  .todo-item.editing, .tl-item.editing { gap: 6px; flex-wrap: wrap; }
+  .ei-date { width: 118px; flex: none; }
+  .ei-text { flex: 1; min-width: 120px; }
+  .ei-date, .ei-text { border: 1px solid var(--line-2); border-radius: 4px; padding: 4px 7px; font-size: 12.5px; color: var(--text); background: #fff; font-family: inherit; }
+  .ei-date:focus, .ei-text:focus { outline: none; border-color: var(--accent); }
+  .quick-add { display: flex; gap: 6px; margin-top: 8px; }
+  .quick-add input { border: 1px solid var(--line-2); border-radius: 4px; padding: 6px 9px; font-size: 12.5px; color: var(--text); background: #fff; font-family: inherit; }
+  .quick-add input[type="date"] { width: 122px; flex: none; }
+  .quick-add input[type="text"] { flex: 1; min-width: 0; }
+  .quick-add input:focus { outline: none; border-color: var(--accent); }
+  .quick-add button { flex: none; width: 34px; border: 1px solid var(--line-2); border-radius: 4px; background: #fff; cursor: pointer; font-size: 14px; color: var(--muted); }
+  .quick-add button:hover { background: var(--hl); color: var(--text); }
+  .detail-sub { font-size: 11.5px; color: var(--faint); margin-top: 2px; }
+  .detail-prog { margin-top: 8px; display: flex; align-items: center; gap: 8px; }
+  .detail-prog .dp-bar { flex: 1; height: 8px; background: #F0EFEA; border-radius: 4px; overflow: hidden; }
+  .detail-prog .dp-fill { height: 100%; border-radius: 4px; transition: width .25s ease; }
+  .detail-prog .dp-num { font-size: 11.5px; font-weight: 600; color: var(--text); min-width: 58px; text-align: right; }
+  .urgent { display: inline-block; font-size: 10px; font-weight: 600; color: #fff; background: var(--danger); border-radius: 4px; padding: 1px 7px; vertical-align: 3px; }
+  .detail-right textarea.notes { min-height: 72px; resize: vertical; width: 100%; border: 1px solid var(--line-2); border-radius: 4px; padding: 8px 10px; font-size: 13px; color: var(--text); background: #fff; font-family: inherit; }
+  .detail-right textarea.notes:focus { outline: none; border-color: var(--accent); }
+
+  /* ============ 弹窗 ============ */
+  .modal-mask { position: fixed; inset: 0; background: rgba(50,48,42,.35); z-index: 100; display: flex; align-items: center; justify-content: center; }
+  .modal { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; width: 360px; }
+  .modal-title { font-size: 15px; font-weight: 600; margin-bottom: 14px; }
+  .modal label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+  .modal input, .modal select { width: 100%; height: 36px; border: 1px solid var(--line-2); border-radius: 4px; padding: 0 10px; font-size: 13px; color: var(--text); background: #fff; margin-top: 4px; font-family: inherit; }
+  .modal input:focus, .modal select:focus { outline: none; border-color: var(--accent); }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+  .modal-actions button { height: 34px; padding: 0 15px; border-radius: 4px; border: 1px solid var(--line-2); background: #fff; font-size: 13px; color: var(--muted); cursor: pointer; }
+  .modal-actions button:hover { background: var(--hl); color: var(--text); }
+  .modal-actions button.primary { background: var(--accent); color: #fff; border: none; }
+  .modal-actions button.primary:hover { background: #FF5C8A; }
+
+  @media (max-width: 1080px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; height: auto; position: static; border-right: none; border-bottom: 1px solid var(--line-2); }
+    .kanban { grid-template-columns: repeat(2, 1fr); }
+    .detail-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body data-page-node-id="tJUilTHZ6MyBw2qzZunKWK">
+
+<div class="app" data-page-node-id="17pungYPS9sjGaGDl6WrZN">
+  <aside class="sidebar" data-page-node-id="pYUgKGxqCdFtECz36tpzpL">
+    <div class="logo" data-page-node-id="leOgjB31084tVwETuYxnVn">
+      <div class="logo-mark" data-page-node-id="e8XyYBwb9XGiUHx0vGOR6A">PM</div>
+      <div data-page-node-id="xFoMMXnGXyMNfLXqlVwnmi">
+        <div class="logo-name" data-page-node-id="iVGGJjrRf7BBOevap0qOG2">项目管理工作台</div>
+        <div class="logo-sub" data-page-node-id="uxBCnwA5Z7PCCBEivW1YDs">井然有序地推进每个项目</div>
+      </div>
+    </div>
+
+    <div data-page-node-id="8CAB475QvX5klJUrXhoRUE">
+      <div class="nav-label" data-page-node-id="zRCd7hZfvjcE7BosLDQNmh">视图</div>
+      <nav class="nav" data-page-node-id="uArpi5Hatgy0bZbRYVKKQ5">
+        <div class="nav-item active" data-view="kanban" data-page-node-id="pacintVGLDcqZObZJsaBig"><span class="nicon" data-page-node-id="dQqh1DdRFsHmG3GCU9DWeZ">▦</span>阶段看板</div>
+        <div class="nav-item" data-view="gantt" data-page-node-id="LVqhUhT6Jve1VQygchNYlV"><span class="nicon" data-page-node-id="0w6qGAIymnRF6fWAHP32xA">☰</span>项目甘特图</div>
+        <div class="nav-item" data-view="calendar" data-page-node-id="1XXz6sVxXalXxJtg314Onx"><span class="nicon" data-page-node-id="Qk3CTYAB9cY6aadjskBCGd">▤</span>月历视图</div>
+      </nav>
+    </div>
+
+    <div data-page-node-id="sgBm2DTpu9lF05G3dLiENK">
+      <div class="nav-label" style="display:flex;align-items:center;justify-content:space-between;padding:0 4px;margin-bottom:6px" data-page-node-id="Iymz1jNOkqhaDIiEoe3eND">
+        <span data-page-node-id="VFbaeKmvfuDP96x50Wi8R5">进行中项目 <span id="ipCount" data-page-node-id="63U1jgPK6eyf8YaH6T0Lap"></span></span>
+        <button class="toggle-btn" id="ipToggle" type="button" data-page-node-id="tLC6ptCsb3zBabB1KZMpy2">＋</button>
+      </div>
+      <div class="ip-list" id="inProgress" style="display:none" data-page-node-id="AOnWu3oaPTIWkHbkoK7bQE"></div>
+      <button class="add-btn" id="addProjBtn" type="button" data-page-node-id="FCV7GBE00LPokFrC5OrE0W">＋ 新增项目</button>
+    </div>
+
+    <div data-page-node-id="C6kwPLQoYRWDxx5rkY8sOE">
+      <div class="nav-label" style="display:flex;align-items:center;justify-content:space-between;padding:0 4px;margin-bottom:6px" data-page-node-id="IxLNqVkFrFVZwP6pXPpRzy">
+        <span data-page-node-id="fMNmUcRNsbPSlAl70XefSV">已完成项目 <span id="doneCount" data-page-node-id="xtEQy1gu27RpjVDGemwJzW"></span></span>
+        <button class="toggle-btn" id="doneToggle" type="button" data-page-node-id="jUrD6Y8FGDgi3IqhXOrRNS">＋</button>
+      </div>
+      <div class="ip-list" id="completed" style="display:none" data-page-node-id="p8ug2NLDWAIixdedRYG5n8"></div>
+    </div>
+
+    <div class="tools" data-page-node-id="JhMS3i7BCqn22x9IitdrFe">
+      <button id="exportBtn" type="button" data-page-node-id="Ad4rgJOd8GT9A4V3KaJjGQ">导出备份</button>
+      <button id="importBtn" type="button" data-page-node-id="gyLK5oE8f3GdwK9W7PWpWq">导入备份</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none" data-page-node-id="XvXJf3LMaa6i4NveF8tKLB">
+    </div>
+    <div class="autosave-note" id="autosaveNote">⚡ 自动保存已开启 · 关闭或刷新后数据不丢</div>
+  </aside>
+
+  <main class="main" data-page-node-id="4pdFbaxcCM25uCMt2uYGPk">
+    <div class="view" id="view-kanban" data-page-node-id="aqKhCCq3yv70vwb6XVnDtC">
+      <section class="card" data-page-node-id="VRsvwHP009BaQMOuabSssq">
+        <h2 data-page-node-id="UJEaANh3qiM3GJgP5vBxs1"><span class="dot" style="background:#FF6B9D" data-page-node-id="2poEDuVDMTUeKRsWsaferW"></span>阶段看板 <span class="tag" id="kbSub" data-page-node-id="FkGvj7CYI3UeCb2qJRCod8"></span></h2>
+        <div class="kanban" id="kanban" data-page-node-id="HY5B0pqxskftheG74B66ee"></div>
+      </section>
+    </div>
+
+    <div class="view" id="view-gantt" style="display:none" data-page-node-id="bk4jRMBwhZRgLGoxHtiz0f">
+      <section class="card" data-page-node-id="I4yFynJXmEiHje1dZGvogq">
+        <h2 data-page-node-id="EfPNtCtJAr3Dbd8JEtEwM9"><span class="dot" style="background:#6BCB77" data-page-node-id="cfygV9N57A8hkZfvyrMLQ0"></span>项目甘特图 <span class="tag" data-page-node-id="VLFGyF2nfzCeXHFtacoEqQ">按住拖拽平移时间轴 · 点击项目名进详情</span></h2>
+        <div class="gantt-wrap" id="ganttWrap" data-page-node-id="QUCbLjNikBWeBzSkeqC0tR"><div class="gantt" id="gantt" data-page-node-id="qPNx1QH8pdID8QLCcSy4Oj"></div></div>
+        <div class="legend" data-page-node-id="X2Tcok3XkjY3EAA4Agf66T">
+          <span class="li" data-page-node-id="UtuJcp9O4LpbGArm8KajUm"><span class="swatch" style="background:#FFEBDD" data-page-node-id="0tppfN8Y07qdVzXAmd0hgK"></span> 项目周期</span>
+          <span class="li" data-page-node-id="1Z3lxS9Og3zyfeuTA4jDMx"><span class="swatch" style="background:#FF8A3D" data-page-node-id="oEWfewfZZkAp8O4A6BHjee"></span> 已推进</span>
+          <span class="li" data-page-node-id="YNLMAmbF2AA3qfgEYrbXgm">◆ 里程碑（实心已完成 · 空心未完成）</span>
+          <span class="li" data-page-node-id="OqPd8ihNHAOgRveECt4oR3"><span style="display:inline-block;width:14px;border-top:2px solid #FF5C5C" data-page-node-id="O3A5G3fpYzqaY0q5bgp3pL"></span> 今日</span>
+        </div>
+      </section>
+    </div>
+
+    <div class="view" id="view-calendar" style="display:none" data-page-node-id="Ju59CbbQwrfqj1Vv5eBMAr">
+      <section class="card" data-page-node-id="Cq0QUV3q3EEItzzY8wi3ea">
+        <h2 data-page-node-id="e3G48M6jkqyqgx5eoGD8Wp"><span class="dot" style="background:#FF8A3D" data-page-node-id="mr7DIaNIRFSKKQ1sf5WmAN"></span>月历视图 <span class="tag" data-page-node-id="DeRmpH7d0zov5f5X0FBaz2">关键节点 · 颜色与项目一致</span></h2>
+        <div class="cal-head" data-page-node-id="dzu0OAFKDXTI3KHVEnPlec">
+          <div class="cal-nav" data-page-node-id="RJdamYgUWA01sFKOk3Khmg">
+            <button onclick="shiftMonth(-1)" data-page-node-id="ZCRROd4cUspB5QYiTLxRXl">‹</button>
+            <span class="mon" id="calMonth" data-page-node-id="pVxgiKx6pbdUKFmQ40N6iy"></span>
+            <button onclick="shiftMonth(1)" data-page-node-id="N7hb6Ucx2aKql39B9sDIpU">›</button>
+            <button style="width:auto;padding:0 12px" onclick="goToday()" data-page-node-id="jSsBZBjfV0L3qPwNgmiTPs">回到本月</button>
+          </div>
+        </div>
+        <div class="cal-grid" id="calGrid" data-page-node-id="8quBSUq3ErDbwlYxBygkoX"></div>
+        <div class="cal-legend" id="calLegend"></div>
+      </section>
+
+      <div class="ev-pop-mask" id="evPop" style="display:none">
+        <div class="ev-pop">
+          <div class="ev-pop-head"><span class="pd" id="evPopDate"></span><button id="evPopClose" type="button">✕</button></div>
+          <div id="evPopList"></div>
+        </div>
+      </div>
+
+      <section class="card" data-page-node-id="G7vpEN01pw0F9zM07oDX4f">
+        <h2 data-page-node-id="AYMDQ6JisXISCY4nHugnBt"><span class="dot" style="background:#9D6BFF" data-page-node-id="vWfROXBABapydF6uQWDFOC"></span>本月时间分布 <span class="tag" id="distMonthLabel" data-page-node-id="4SjbwexgVTTO4LLREtDL13"></span></h2>
+        <div id="distList" data-page-node-id="nYcCPeYJ5Mss77i2am9Ya5"></div>
+      </section>
+    </div>
+
+    <div class="view" id="view-project" style="display:none" data-page-node-id="NX9MT33wtnEZ89ipqOJxG8">
+      <section class="card" data-page-node-id="O6YKq8vaFLbIJvvAF50LvW">
+        <div class="detail-top" data-page-node-id="6xRsyDer8fwec7LbfiVLGu">
+          <button class="back-btn" id="detailBack" type="button" data-page-node-id="xeVk6X9sd4sZTdTW7RP6V8">← 返回</button>
+          <div class="detail-head" data-page-node-id="iJ0Cv58zrl5BfasQBLiec5">
+            <h2 id="detailName" style="display:inline;margin:0" data-page-node-id="k2FpHBt8EZU1cEzfh8mTQV"></h2>
+            <span id="detailUrgent" data-page-node-id="HW1XGqqigdJDR4uB9FSiG5"></span>
+            <div class="detail-sub" id="detailSub" data-page-node-id="7XOtMM9iwmlv4yjtnL7GDd"></div>
+            <div class="detail-prog" id="detailProg" data-page-node-id="detailProgNode"></div>
+          </div>
+        </div>
+        <div class="sec-title" data-page-node-id="f6glHLIke7MJ6fejjMykil">当前状态（点击切换）</div>
+        <div class="stage-switch" id="detailStages" data-page-node-id="wTrCxKD1YU9vDQrnXrZEUZ"></div>
+        <div class="detail-grid" data-page-node-id="X1fCczHXo0AHzY7Nq5TgYf">
+          <div class="detail-left" data-page-node-id="SueYzYshRIGQGSuxweCdv9">
+            <div class="sec-title" data-page-node-id="2ZCF3sAxbzsxHihUZVQUxD">⏱ 项目时间线</div>
+            <div class="tl" id="logList" data-page-node-id="WBbUSrqwLHUJeJ1zCedNVe"></div>
+            <div class="quick-add" data-page-node-id="43MBNlKkoJwCaqKBzaPGeb">
+              <input type="date" id="log-date" data-page-node-id="dRXXbAB1bypSw1A76829OD">
+              <input type="text" id="log-text" placeholder="记录进展、问题、想法…" data-page-node-id="OMvzDoorAtDro3hL5RPfaH">
+              <button id="log-add" type="button" data-page-node-id="OzW76h0qOG1hehi6Ht987G">＋</button>
+            </div>
+            <div class="sec-title" style="margin-top:14px" data-page-node-id="BfjtarycaPm4TI7Q2RAGdB">✅ 完成事项</div>
+            <div id="todoList" data-page-node-id="kcCTho80bzhqEVBmBYGE2f"></div>
+            <div class="quick-add" data-page-node-id="pyThHfYa4MvzSWrBuM7DDE">
+              <input type="date" id="td-date" data-page-node-id="nWB1JtDYGl1IzT1gu3r1mM">
+              <input type="text" id="td-title" placeholder='节点名称，如"打样确认"' data-page-node-id="TagzQpcqrgvHg1u0IrowHf">
+              <button id="td-add" type="button" data-page-node-id="10fTWr9egYQdJxHSixj8Lx">＋</button>
+            </div>
+          </div>
+          <div class="detail-right" data-page-node-id="20GidJoMzdkoDAIUq28UJe">
+            <div class="sec-title" data-page-node-id="HAm5wWrnOVjACbAlCpZnnK">备注</div>
+            <textarea class="notes" id="detailNotes" placeholder="记录项目备注…"></textarea>
+            <div class="sec-title" data-page-node-id="JPFg2uvTLcBqYxI777mylD">方案</div>
+            <textarea class="notes" id="detailPlans" placeholder="记录方案…"></textarea>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<!-- 新增项目弹窗 -->
+<div class="modal-mask" id="modal" style="display:none" data-page-node-id="rsjEoylQnuIjbSCriwj3Pn">
+  <div class="modal" data-page-node-id="bRW0oWgpN1jJnzHwAfvYuv">
+    <div class="modal-title" data-page-node-id="DfjZdcuvLUew7DKoqkKrfK">新增项目</div>
+    <label data-page-node-id="bCIkAt0RhAeV4cGaTZbqaf">项目名称 <input id="np-name" type="text" placeholder="例如：电子版内页设计" data-page-node-id="kZ4XDFA4lbHsYxLHgN7M7h"></label>
+    <label data-page-node-id="n1NFUhtmFLD596ksq82MiT">项目颜色
+      <select id="np-color" data-page-node-id="mY9xAueQzsHjRoB7xZHuAW"></select>
+    </label>
+    <label data-page-node-id="sVgPncuOHJmRTc6tdGn0Qh">状态
+      <select id="np-stage" data-page-node-id="gyXXiPdJeGE8EnTU865Oyo"></select>
+    </label>
+    <label data-page-node-id="LpIrlfTkoMNnt928mLN2bk">下一步动作 <input id="np-next" type="text" placeholder="例如：印厂打样确认" data-page-node-id="ljqpGkPxh1DmtOmzSDbqLb"></label>
+    <label data-page-node-id="UletSJbo72Xg203zOzbTqn">开始日期 <input id="np-start" type="date" data-page-node-id="MGJVQvj1qMuan2Za7uRtJC"></label>
+    <label data-page-node-id="5PxCG7SJ2nx3IQvDcPwnna">预计完成日期 <input id="np-end" type="date" data-page-node-id="qiforX1HC7Py7cC66UBB4d"></label>
+    <div class="modal-actions" data-page-node-id="myevYQaGCBFU2GV0zBFebn">
+      <button id="np-cancel" type="button" data-page-node-id="RzJX2HN366SDNDSwDXTaxG">取消</button>
+      <button class="primary" id="np-save" type="button" data-page-node-id="dWjZxX4iAOP8StTetNpv0L">添加</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// 浏览器兼容检测（ES5 语法，兼容老浏览器）：不支持 ES6 时给出明确提示
+try { new Function('() => {}'); } catch (e) {
+  document.write('<div style="font-family:sans-serif;padding:40px 32px;color:#3A3238;font-size:15px;line-height:2">当前浏览器版本过旧，无法运行此工作台。<br>请用 <b>Chrome / Edge / Firefox</b> 打开本文件。<br><br>方法：右键文件 → 打开方式 → 选择 Chrome（勾选「始终使用此应用」）。</div>');
+  throw e;
+}
+</script>
+
+<script>
+/* ============================================================
+   ▍常量与数据模型
+   ============================================================ */
+const TODAY = '2026-10-18';
+const STORAGE_KEY = 'pm_workbench_v3';
+
+// 项目色板（莫兰迪低饱和，对应不同项目）
+const PALETTE = [
+  { key: 'orange', label: '橙', color: '#D97859', emoji: '📄' },
+  { key: 'green',  label: '绿', color: '#76A888', emoji: '🖨️' },
+  { key: 'purple', label: '紫', color: '#9878B8', emoji: '🟣' },
+  { key: 'yellow', label: '黄', color: '#D6B268', emoji: '📱' },
+  { key: 'blue',   label: '蓝', color: '#5A88B8', emoji: '🎨' },
+  { key: 'gray',   label: '灰', color: '#8B8B87', emoji: '📌' },
+];
+
+// 状态（看板列顺序）
+const STATUSES = [
+  { key: 'design',     label: '设计中',     color: '#5A88B8' },
+  { key: 'testing',    label: '测试中',     color: '#9878B8' },
+  { key: 'production', label: '制作/打样中', color: '#D97859' },
+  { key: 'completed',  label: '已完成',     color: '#76A888' },
+];
+const statusMap = {};
+STATUSES.forEach(s => { statusMap[s.key] = s; });
+
+// 看板列（每状态一列）
+const BOARD_COLUMNS = [
+  { key: 'design',     label: '✏️ 设计中', statuses: ['design'] },
+  { key: 'testing',    label: '🧪 测试中', statuses: ['testing'] },
+  { key: 'production', label: '🏭 制作/打样中', statuses: ['production'] },
+  { key: 'completed',  label: '✅ 已完成', statuses: ['completed'] },
+];
+
+const isCompleted = p => p.status === 'completed';
+const inProgress = () => PROJECTS.filter(p => !isCompleted(p));
+
+/* 内置数据：真实项目快照（2026-10-18 从浏览器本地数据同步而来） */
+const SEED_PROJECTS = [
+  {
+    "id": 6,
+    "name": "侧翻盖数字变压器 0830",
+    "emoji": "📄",
+    "color": "#D97859",
+    "status": "testing",
+    "nextAction": "",
+    "start": "2026-09-22",
+    "end": "2026-11-30",
+    "milestones": [],
+    "logs": [
+      {
+        "id": 101,
+        "date": "2026-09-22",
+        "type": "",
+        "text": "Bill外壳打样",
+        "done": false
+      },
+      {
+        "id": 102,
+        "date": "2026-09-23",
+        "type": "",
+        "text": "孙工数码管功能实现",
+        "done": false
+      },
+      {
+        "id": 103,
+        "date": "2026-10-17",
+        "type": "",
+        "text": "何工测试",
+        "done": false
+      },
+      {
+        "id": 104,
+        "date": "2026-10-19",
+        "type": "",
+        "text": "侧翻盖样品寄出",
+        "done": false
+      },
+      {
+        "id": 105,
+        "date": "2026-10-17",
+        "type": "",
+        "text": "Billbill 数码管散光（打胶）、接线孔翻盖结构、硅胶确认",
+        "done": false
+      }
+    ],
+    "todos": [],
+    "notes": "",
+    "plans": ""
+  },
+  {
+    "id": 7,
+    "name": "分离式 82804",
+    "emoji": "🖨️",
+    "color": "#76A888",
+    "status": "testing",
+    "nextAction": "分离式样品寄出",
+    "start": "2026-10-23",
+    "end": "2026-11-17",
+    "milestones": [],
+    "logs": [
+      {
+        "id": 101,
+        "date": "2026-10-16",
+        "type": "",
+        "text": "分离式 何工测试",
+        "done": false
+      },
+      {
+        "id": 102,
+        "date": "2026-10-23",
+        "type": "",
+        "text": "分离式样品寄出",
+        "done": false
+      }
+    ],
+    "todos": [],
+    "notes": "",
+    "plans": ""
+  },
+  {
+    "id": 8,
+    "name": "F系列",
+    "emoji": "🟣",
+    "color": "#9878B8",
+    "status": "design",
+    "nextAction": "",
+    "start": "2026-10-17",
+    "end": "2026-11-17",
+    "milestones": [],
+    "logs": [
+      {
+        "id": 103,
+        "date": "2026-10-19",
+        "type": "",
+        "text": "Bill标签样品",
+        "done": false
+      },
+      {
+        "id": 104,
+        "date": "2026-10-17",
+        "type": "",
+        "text": "1.端子换小电流2.WIFI款 天线换卡扣 30*20 塑胶卡扣 4.bill 样品打五套",
+        "done": false
+      }
+    ],
+    "todos": [],
+    "notes": "",
+    "plans": ""
+  },
+  {
+    "id": 9,
+    "name": "H系列",
+    "emoji": "📱",
+    "color": "#D6B268",
+    "status": "design",
+    "nextAction": "电源方案确认",
+    "start": "2026-10-17",
+    "end": "2026-11-17",
+    "milestones": [],
+    "logs": [
+      {
+        "id": 105,
+        "date": "2026-10-16",
+        "type": "",
+        "text": "李工 24V 200W300W大功率方案",
+        "done": false
+      }
+    ],
+    "todos": [],
+    "notes": "",
+    "plans": ""
+  }
+];
+
+// 旧演示数据签名：若本地存的正是这套演示数据，视为无有效数据，改用上面的真实快照
+const DEMO_SIG = ['电子版内页设计', '纸质版内页', '亚克力印章', '账号运营', '六联印章'];
+function isDemoData(arr) {
+  return Array.isArray(arr) && arr.length === DEMO_SIG.length && arr.every(p => DEMO_SIG.includes(p.name));
+}
+
+/* ============================================================
+   ▍持久化
+   ============================================================ */
+/* 存储检测：localStorage 不可用（如部分 file:// 环境）时降级为内存存储 */
+const _memStore = {};
+const storageOK = (() => {
+  try { const k = '__pm_t__'; localStorage.setItem(k, '1'); localStorage.removeItem(k); return true; }
+  catch (e) { return false; }
+})();
+function storageGet(key) {
+  if (storageOK) { try { return localStorage.getItem(key); } catch (e) { return _memStore[key] || null; } }
+  return _memStore[key] || null;
+}
+function storageSet(key, val) {
+  if (storageOK) { try { localStorage.setItem(key, val); return; } catch (e) {} }
+  _memStore[key] = val;
+}
+
+function loadProjects() {
+  try {
+    const raw = storageGet(STORAGE_KEY);
+    if (!raw) return null;
+    const arr = JSON.parse(raw);
+    if (!Array.isArray(arr) || !arr.length) return null;
+    if (isDemoData(arr)) return null;   // 旧演示数据 → 用内置真实快照替换
+    return arr;
+  } catch (e) {}
+  return null;
+}
+function saveProjects() { storageSet(STORAGE_KEY, JSON.stringify(PROJECTS)); }
+function exportData() {
+  const blob = new Blob([JSON.stringify(PROJECTS, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '项目工作台备份-' + TODAY + '.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function importData(file) {
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const arr = JSON.parse(r.result);
+      if (!Array.isArray(arr)) throw new Error('bad');
+      PROJECTS = arr;
+      nextId = Math.max(...PROJECTS.map(p => p.id), 0) + 1;
+      normalizeProjects(); saveProjects(); renderAll();
+      alert('导入成功');
+    } catch (e) { alert('导入失败：文件格式不正确'); }
+  };
+  r.readAsText(file);
+}
+
+let PROJECTS = loadProjects() || SEED_PROJECTS.map(p => JSON.parse(JSON.stringify(p)));
+let nextId = Math.max(...PROJECTS.map(p => p.id), 0) + 1;
+// 节点 id 接着现有数据往后排，避免与已有时间线/事项 id 撞车（撞车会导致删除时误删多条）
+let nodeSeq = Math.max(100, ...PROJECTS.flatMap(p =>
+  [...(p.logs || []), ...(p.todos || [])].map(x => Number(x.id) || 0)));
+let currentDetailId = null;
+const getProject = id => PROJECTS.find(p => p.id === id);
+
+// 补齐字段 + 兼容旧数据（nodes → logs/todos）
+function normalizeProjects() {
+  const MIGRATE = { ideation: 'design', active: 'production', paused: 'design', ended: 'completed' };
+  PROJECTS.forEach(p => {
+    if (Array.isArray(p.nodes) && p.nodes.length) {
+      p.logs = (p.logs || []).concat(p.nodes.map(n => ({ id: n.id, date: n.date, type: '', text: [n.progress, n.idea, n.issue].filter(Boolean).join('；') || n.title })));
+      p.todos = (p.todos || []).concat(p.nodes.map(n => ({ id: n.id + 5000, date: n.date, title: n.title, done: !!n.done })));
+    }
+    delete p.nodes;
+    p.logs = p.logs || [];
+    p.todos = p.todos || [];
+    // 时间线节点同样可打钩：补齐 done 字段
+    p.logs.forEach(l => { if (typeof l.done !== 'boolean') l.done = !!l.done; });
+    if (!p.color) { const c = PALETTE[(p.id - 1) % PALETTE.length]; p.color = c.color; }
+    if (!p.emoji) { const c = PALETTE[(p.id - 1) % PALETTE.length]; p.emoji = c.emoji; }
+    // 旧状态 → 新 4 态迁移（否则 statusMap 找不到会崩溃）
+    if (MIGRATE[p.status]) p.status = MIGRATE[p.status];
+    if (!statusMap[p.status]) p.status = 'design';
+  });
+  // 进度由完成事项勾选比例重算
+  PROJECTS.forEach(p => recalcProgress(p));
+}
+normalizeProjects();
+saveProjects();   // 首次加载即写入本地，保证关闭后可恢复
+
+/* ============================================================
+   ▍工具
+   ============================================================ */
+function parseDate(s) { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); }
+function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+function fmtDate(d) { return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
+
+// 可打钩的节点 = 完成事项 + 项目时间线事件；勾选比例即项目进度
+function checkItems(p) { return [...(p.todos || []), ...(p.logs || [])]; }
+function doneStat(p) {
+  const items = checkItems(p);
+  return { done: items.filter(x => x.done).length, total: items.length };
+}
+// 进度由打钩比例自动计算；全部打钩 → 项目标记完成
+function recalcProgress(p) {
+  const { done, total } = doneStat(p);
+  if (!total) return;
+  p.progress = Math.round(done / total * 100);
+  if (done === total) p.status = 'completed';
+}
+
+// 下一步动作自动推导：未完成事项 > 未完成时间线节点 > 未完成里程碑 > 手动填的下一步
+function nextStep(p) {
+  if (p.status === 'completed') return '已完成 ✓';
+  const todo = (p.todos || []).filter(t => !t.done).sort((a, b) => a.date.localeCompare(b.date))[0];
+  if (todo) return `${todo.title} · ${todo.date}`;
+  const log = (p.logs || []).filter(l => !l.done).sort((a, b) => a.date.localeCompare(b.date))[0];
+  if (log) return `${log.text.length > 18 ? log.text.slice(0, 18) + '…' : log.text} · ${log.date}`;
+  const ms = (p.milestones || []).filter(m => m.date > TODAY).sort((a, b) => a.date.localeCompare(b.date))[0];
+  if (ms) return `${ms.name} · ${ms.date}`;
+  return p.nextAction || '暂无下一步';
+}
+function daysBetween(a, b) { return Math.round((b - a) / 86400000); }
+function hexToRgba(hex, a) { const n = parseInt(hex.slice(1), 16); return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`; }
+const pName = p => `${p.emoji} ${p.name}`;
+
+/* ============================================================
+   ▍侧栏
+   ============================================================ */
+function ipItemHtml(p) {
+  return `<div class="ip-item" data-id="${p.id}" title="点击查看详情">
+    <span class="bar" style="background:${p.color}"></span>
+    <div class="info"><div class="nm">${pName(p)}</div><div class="dt">${p.start} ~ ${p.end}</div></div>
+    <span class="badge" style="background:${statusMap[p.status].color}">${statusMap[p.status].label}</span>
+    <button class="del" data-id="${p.id}" title="删除">×</button>
+  </div>`;
+}
+function renderSidebar() {
+  const list = inProgress().slice().sort((a,b) => STATUSES.findIndex(s=>s.key===a.status) - STATUSES.findIndex(s=>s.key===b.status));
+  document.getElementById('ipCount').textContent = '· ' + list.length;
+  document.getElementById('inProgress').innerHTML = list.map(ipItemHtml).join('') || '<div class="empty">暂无进行中项目</div>';
+  const done = PROJECTS.filter(isCompleted).sort((a,b) => a.end.localeCompare(b.end));
+  document.getElementById('doneCount').textContent = '· ' + done.length;
+  document.getElementById('completed').innerHTML = done.map(ipItemHtml).join('') || '<div class="empty">暂无已完成项目</div>';
+  const kbSub = document.getElementById('kbSub');
+  if (kbSub) kbSub.textContent = `共 ${list.length} 个进行中的项目 · 拖动卡片调整阶段`;
+}
+function removeProject(id) { PROJECTS = PROJECTS.filter(p => p.id !== id); saveProjects(); renderAll(); }
+
+/* ============================================================
+   ▍阶段看板
+   ============================================================ */
+function urgentLabel(p) {
+  if (isCompleted(p)) return '';
+  const dl = daysBetween(parseDate(TODAY), parseDate(p.end));
+  if (dl < 0) return '<span class="urgent">已逾期</span>';
+  if (dl < 3) return `<span class="urgent">还剩${dl}天</span>`;
+  return '';
+}
+function renderKanban() {
+  document.getElementById('kanban').innerHTML = BOARD_COLUMNS.map(col => {
+    const items = PROJECTS.filter(p => col.statuses.includes(p.status));
+    const cards = items.map(p => {
+      const stTag = col.statuses.length > 1 ? `<span class="st-tag" style="background:${statusMap[p.status].color}">${statusMap[p.status].label}</span>` : '';
+      const ds = doneStat(p);
+      return `<div class="kb-card" draggable="true" data-id="${p.id}">
+        <div class="kc-top"><span class="kc-cat" style="background:${p.color}"></span><span class="kc-name">${pName(p)}</span>${stTag}${urgentLabel(p)}</div>
+        <div class="kc-deadline">🕐 预计完成：${p.end}</div>
+        <div class="kc-next"><span class="pin">📍</span><span>${nextStep(p)}</span></div>
+        <div class="kb-prog">
+          <div class="pr-head"><span>进度</span><span>${p.progress}% · ✓${ds.done}/${ds.total}</span></div>
+          <div class="pr-bar"><div class="pr-fill" style="width:${p.progress}%;background:${p.color}"></div></div>
+        </div>
+      </div>`;
+    }).join('');
+    const emptyHint = col.key === 'design' ? '<div class="empty">拖动项目卡片到这里</div>' : '<div class="empty">—</div>';
+    return `<div class="kb-col" data-status="${col.key}">
+      <h3>${col.label} <span class="cnt">${items.length}</span></h3>
+      ${cards || emptyHint}
+    </div>`;
+  }).join('');
+
+  document.querySelectorAll('.kb-card').forEach(card => {
+    card.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', card.dataset.id); card.classList.add('dragging'); });
+    card.addEventListener('dragend', () => card.classList.remove('dragging'));
+    // 点击卡片（非拖拽）→ 跳转项目详情
+    card.addEventListener('click', e => {
+      if (card.classList.contains('dragging')) return;
+      openProjectDetail(Number(card.dataset.id));
+    });
+  });
+  document.querySelectorAll('.kb-col').forEach(colEl => {
+    colEl.addEventListener('dragover', e => { e.preventDefault(); colEl.classList.add('dragover'); });
+    colEl.addEventListener('dragleave', () => colEl.classList.remove('dragover'));
+    colEl.addEventListener('drop', e => {
+      e.preventDefault(); colEl.classList.remove('dragover');
+      const id = Number(e.dataTransfer.getData('text/plain'));
+      const p = getProject(id);
+      const col = BOARD_COLUMNS.find(c => c.key === colEl.dataset.status);
+      if (p && col && !col.statuses.includes(p.status)) {
+        p.status = col.statuses[0];
+        saveProjects(); renderAll();
+      }
+    });
+  });
+}
+
+/* ============================================================
+   ▍甘特图
+   ============================================================ */
+function renderGantt() {
+  const NAME_W = 150, PX = 30;
+  const WEEK = ['日','一','二','三','四','五','六'];
+  const allDates = [];
+  PROJECTS.forEach(p => { allDates.push(parseDate(p.start), parseDate(p.end)); p.milestones.forEach(m => allDates.push(parseDate(m.date))); });
+  allDates.push(parseDate(TODAY));
+  const min = new Date(Math.min(...allDates.map(d => d.getTime()))); min.setDate(1);
+  const max = new Date(Math.max(...allDates.map(d => d.getTime()))); max.setMonth(max.getMonth()+1, 0);
+  const totalDays = daysBetween(min, max) + 1;
+  const TW = totalDays * PX;
+  const x = d => daysBetween(min, d) * PX;
+
+  let monthsHtml = '', daysHtml = '', gridHtml = '';
+  const cur = new Date(min.getFullYear(), min.getMonth(), 1);
+  while (cur <= max) {
+    const dim = new Date(cur.getFullYear(), cur.getMonth()+1, 0).getDate();
+    monthsHtml += `<span class="mc" style="left:${x(cur)}px;width:${dim*PX-2}px">${cur.getFullYear()}-${pad2(cur.getMonth()+1)}</span>`;
+    if (x(cur) > 0) gridHtml += `<span class="vl" style="left:${NAME_W + x(cur)}px"></span>`;
+    cur.setMonth(cur.getMonth() + 1);
+  }
+  const d = new Date(min);
+  for (let i = 0; i < totalDays; i++) {
+    const dow = d.getDay(), isToday = fmtDate(d) === TODAY, wknd = dow === 0 || dow === 6;
+    daysHtml += `<div class="dcell ${wknd?'wknd':''} ${isToday?'today-d':''}" style="left:${i*PX}px;width:${PX}px"><div class="dnum">${d.getDate()}</div><div class="dweek">周${WEEK[dow]}</div></div>`;
+    if (wknd) gridHtml += `<span class="wk" style="left:${NAME_W + i*PX}px;width:${PX}px"></span>`;
+    d.setDate(d.getDate() + 1);
+  }
+
+  const rows = PROJECTS.map(p => {
+    const s = parseDate(p.start), e = parseDate(p.end), t = parseDate(TODAY);
+    const sx = x(s), ex = x(e) + PX;
+    const pxEnd = sx + (ex - sx) * (p.progress / 100);   // 已推进宽度按进度百分比
+    const track = `<div class="g-track" data-pid="${p.id}" style="left:${sx}px;width:${ex-sx}px;background:${hexToRgba(p.color,.18)}"></div>`;
+    const bar = p.progress > 0 ? `<div class="g-bar" data-pid="${p.id}" style="left:${sx}px;width:${Math.max(pxEnd-sx,2)}px;background:${p.color}"></div>` : '';
+    const ms = p.milestones.map((m, i) => {
+      const done = m.date <= TODAY;
+      const topOffset = i % 2 === 0 ? -22 : -34;
+      return `<div class="g-ms" style="left:${x(parseDate(m.date)) + PX/2}px" title="${m.name} · ${m.date}">
+        <span class="mlabel" style="top:${topOffset}px">${m.name}</span><span class="dms ${done?'done':'todo'}"></span></div>`;
+    }).join('');
+    // 时间线事件点：完成事项 + 时间线记录
+    const evMarks = [];
+    (p.todos || []).forEach(td => evMarks.push({ date: td.date, kind: td.done ? 'dot-done' : 'dot-todo', label: td.title }));
+    (p.logs || []).forEach(lg => evMarks.push({ date: lg.date, kind: lg.done ? 'dot-log dot-done' : 'dot-log', label: (lg.done ? '✓ ' : '') + lg.text.slice(0, 14) }));
+    const evHtml = evMarks.map(ev => {
+      const color = ev.kind === 'dot-log' ? '#c9c4bb' : p.color;
+      return `<span class="g-dot ${ev.kind}" style="left:${x(parseDate(ev.date)) + PX/2}px;background:${color}" title="${ev.label} · ${ev.date}"></span>`;
+    }).join('');
+    return `<div class="g-row">
+      <div class="g-name" data-pid="${p.id}" title="点击查看详情">
+        <div class="nm">${pName(p)}</div><div class="st" style="color:${statusMap[p.status].color}">${statusMap[p.status].label}</div>
+      </div>
+      <div class="g-timeline" style="width:${TW}px">${track}${bar}${ms}${evHtml}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('gantt').innerHTML = `
+    <div class="g-head"><div class="g-corner">项目 / 状态</div><div class="g-head-right" style="width:${TW}px"><div class="g-months-row">${monthsHtml}</div><div class="g-days-row">${daysHtml}</div></div></div>
+    <div class="g-body"><div class="g-gridlines">${gridHtml}</div><div class="g-today" style="left:${NAME_W + x(parseDate(TODAY)) + PX/2}px"><span class="tlabel">今日</span></div>${rows}</div>`;
+}
+(function () {
+  const wrap = document.getElementById('ganttWrap');
+  let down = false, sx = 0, sl = 0;
+  wrap.addEventListener('mousedown', e => { down = true; sx = e.clientX; sl = wrap.scrollLeft; wrap.classList.add('grabbing'); });
+  window.addEventListener('mousemove', e => { if (!down) return; wrap.scrollLeft = sl - (e.clientX - sx); });
+  window.addEventListener('mouseup', () => { down = false; wrap.classList.remove('grabbing'); });
+  wrap.addEventListener('wheel', e => { wrap.scrollLeft += e.deltaY + e.deltaX; e.preventDefault(); }, { passive: false });
+})();
+
+/* ============================================================
+   ▍月历 + 分布
+   ============================================================ */
+let calYear, calMonth;
+function initCal() { const [y,m] = TODAY.split('-').map(Number); calYear = y; calMonth = m - 1; }
+function shiftMonth(n) { const d = new Date(calYear, calMonth + n, 1); calYear = d.getFullYear(); calMonth = d.getMonth(); renderCalendar(); renderDistribution(); }
+function goToday() { initCal(); renderCalendar(); renderDistribution(); }
+
+let calEvents = {};   // { 'YYYY-MM-DD': [{icon,text,color,project,pid}] }
+function renderCalendar() {
+  const first = new Date(calYear, calMonth, 1);
+  const startOffset = first.getDay();
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  document.getElementById('calMonth').textContent = `${calYear} 年 ${calMonth+1} 月`;
+
+  calEvents = {};
+  const push = (day, icon, text, p) => { (calEvents[day] = calEvents[day] || []).push({ icon, text, color: p.color, project: p.name, pid: p.id }); };
+  PROJECTS.forEach(p => {
+    push(p.start, '🚀', '项目启动', p);
+    push(p.end, '🏁', '预计完成', p);
+    p.milestones.forEach(m => push(m.date, m.date <= TODAY ? '✅' : '🚩', m.name, p));
+    (p.todos || []).forEach(t => push(t.date, t.done ? '✅' : '📍', t.title, p));
+    (p.logs || []).forEach(l => push(l.date, l.done ? '✅' : '📝', l.text, p));
+  });
+
+  const MAX_SHOW = 3;
+  let cells = '<span class="wd">周日</span><span class="wd">周一</span><span class="wd">周二</span><span class="wd">周三</span><span class="wd">周四</span><span class="wd">周五</span><span class="wd">周六</span>';
+  for (let i = 0; i < startOffset; i++) cells += '<div class="cal-cell out"></div>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const key = fmtDate(new Date(calYear, calMonth, d));
+    const evs = calEvents[key] || [];
+    const ev = evs.slice(0, MAX_SHOW).map((m, i) =>
+      `<div class="ev" data-day="${key}" data-i="${i}" data-pid="${m.pid}" style="background:${hexToRgba(m.color,.14)};border-left-color:${m.color}"><span class="ic">${m.icon}</span><span class="ev-t">${escapeHtml(m.text)}</span></div>`).join('');
+    const more = evs.length > MAX_SHOW ? `<div class="more" data-day="${key}">+${evs.length - MAX_SHOW} 更多</div>` : '';
+    const cls = key === TODAY ? 'cal-cell today' : 'cal-cell';
+    cells += `<div class="${cls}"><div class="dnum">${d}</div>${ev}${more}</div>`;
+  }
+  document.getElementById('calGrid').innerHTML = cells;
+
+  // 图例：项目色点 + 名称（进行中项目）
+  document.getElementById('calLegend').innerHTML = inProgress().map(p =>
+    `<span class="lg"><i style="background:${p.color}"></i>${pName(p)}</span>`).join('');
+}
+
+// 点击事件 / "+N 更多" → 展开浮层查看当天全部内容
+function openDayPop(key) {
+  const evs = calEvents[key] || []; if (!evs.length) return;
+  document.getElementById('evPopDate').textContent = key;
+  document.getElementById('evPopList').innerHTML = evs.map(m => `
+    <div class="ev-pop-item" style="border-left-color:${m.color}" data-pid="${m.pid}">
+      <span class="pi">${m.icon}</span>
+      <div><div class="pt">${escapeHtml(m.text)}</div><div class="pp" style="color:${m.color}">${escapeHtml(m.project)}</div></div>
+    </div>`).join('');
+  document.getElementById('evPop').style.display = 'flex';
+}
+// 点击事件胶囊或「+N 更多」→ 先展开浮层看当天全部事项；浮层里点具体事项 → 跳对应项目
+document.getElementById('calGrid').addEventListener('click', e => {
+  const evEl = e.target.closest('.ev');
+  if (evEl) { openDayPop(evEl.dataset.day); return; }
+  const more = e.target.closest('.more');
+  if (more) openDayPop(more.dataset.day);
+});
+document.getElementById('evPopClose').addEventListener('click', () => document.getElementById('evPop').style.display = 'none');
+document.getElementById('evPop').addEventListener('click', e => {
+  if (e.target.id === 'evPop') { e.target.style.display = 'none'; return; }
+  const item = e.target.closest('.ev-pop-item');
+  if (item) { document.getElementById('evPop').style.display = 'none'; openProjectDetail(Number(item.dataset.pid)); }
+});
+
+function renderDistribution() {
+  const monthStart = new Date(calYear, calMonth, 1);
+  const monthEnd = new Date(calYear, calMonth+1, 0);
+  const dim = monthEnd.getDate();
+  document.getElementById('distMonthLabel').textContent = `${calYear} 年 ${calMonth+1} 月 · 各项目占用程度`;
+  const rows = [];
+  inProgress().forEach(p => {
+    const s = parseDate(p.start), e = parseDate(p.end);
+    const as = s > monthStart ? s : monthStart;
+    const ae = e < monthEnd ? e : monthEnd;
+    if (as > ae) return;
+    const days = daysBetween(as, ae) + 1;
+    rows.push(`<div class="dist-row">
+      <div class="dn">${pName(p)}</div>
+      <div class="dist-track"><div class="dist-fill" style="width:${days/dim*100}%;background:${p.color}"></div></div>
+      <div class="dist-days">${days}天</div>
+    </div>`);
+  });
+  document.getElementById('distList').innerHTML = rows.join('') || '<div class="empty">本月无进行中项目</div>';
+}
+
+/* ============================================================
+   ▍项目详情
+   ============================================================ */
+let editingTodo = null;
+let editingLog = null;
+function escapeHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function todoItemHtml(t) {
+  if (editingTodo === t.id) {
+    return `<div class="todo-item editing">
+      <input type="date" class="ei-date" id="ed-td-date" value="${t.date}">
+      <input type="text" class="ei-text" id="ed-td-title" value="${escapeHtml(t.title)}">
+      <button class="mini-btn ok" data-edsave="todo" data-id="${t.id}" type="button">保存</button>
+      <button class="mini-btn" data-edcancel type="button">取消</button>
+    </div>`;
+  }
+  return `<div class="todo-item ${t.done?'done':''}">
+    <label class="todo-check"><input type="checkbox" data-tid="${t.id}" ${t.done?'checked':''}></label>
+    <div class="todo-line"><span class="tt">${t.title}</span><span class="td">${t.date}</span></div>
+    <div class="ia-group">
+      <button class="ia" data-edit="todo" data-id="${t.id}" type="button" title="编辑">✎</button>
+      <button class="ia del" data-del="todo" data-id="${t.id}" type="button" title="删除">×</button>
+    </div>
+  </div>`;
+}
+
+function logItemHtml(l) {
+  if (editingLog === l.id) {
+    return `<div class="tl-item editing">
+      <input type="date" class="ei-date" id="ed-lg-date" value="${l.date}">
+      <input type="text" class="ei-text" id="ed-lg-text" value="${escapeHtml(l.text)}">
+      <button class="mini-btn ok" data-edsave="log" data-id="${l.id}" type="button">保存</button>
+      <button class="mini-btn" data-edcancel type="button">取消</button>
+    </div>`;
+  }
+  return `<div class="tl-item ${l.done ? 'done' : ''}">
+    <div class="tl-top"><label class="todo-check"><input type="checkbox" data-lid="${l.id}" ${l.done?'checked':''}></label><span class="tl-date">${l.date}</span>${l.type?`<span class="tl-type">${l.type}</span>`:''}
+      <span class="ia-group"><button class="ia" data-edit="log" data-id="${l.id}" type="button" title="编辑">✎</button><button class="ia del" data-del="log" data-id="${l.id}" type="button" title="删除">×</button></span>
+    </div>
+    <div class="tl-text">${l.text}</div>
+  </div>`;
+}
+
+function renderProjectDetail() {
+  const p = getProject(currentDetailId); if (!p) return;
+  document.getElementById('detailName').textContent = pName(p);
+  document.getElementById('detailName').style.color = p.color;
+  document.getElementById('detailSub').textContent = `开始于 ${p.start} · 预计完成 ${p.end} · 进度 ${p.progress}%`;
+  const ds = doneStat(p);
+  document.getElementById('detailProg').innerHTML = `
+    <div class="dp-bar"><div class="dp-fill" style="width:${p.progress}%;background:${p.color}"></div></div>
+    <span class="dp-num">✓ ${ds.done}/${ds.total}</span>`;
+  const dl = daysBetween(parseDate(TODAY), parseDate(p.end));
+  document.getElementById('detailUrgent').innerHTML = (!isCompleted(p) && dl < 3) ? `<span class="urgent">‼️ ${dl < 0 ? '已逾期' : '还剩' + dl + '天'}</span>` : '';
+  document.getElementById('detailStages').innerHTML = STATUSES.map(st =>
+    `<button class="stage-btn ${p.status===st.key?'on':''}" data-status="${st.key}" style="${p.status===st.key?`background:${st.color};border-color:${st.color}`:''}">${st.label}</button>`).join('');
+  const logs = (p.logs||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
+  document.getElementById('logList').innerHTML = logs.map(logItemHtml).join('') || '<div class="empty">还没有记录，在下方添加第一条</div>';
+  const todos = (p.todos||[]).slice().sort((a,b)=>a.date.localeCompare(b.date));
+  document.getElementById('todoList').innerHTML = todos.map(todoItemHtml).join('') || '<div class="empty">暂无事项，在下方添加</div>';
+  document.getElementById('detailNotes').value = p.notes || '';
+  document.getElementById('detailPlans').value = p.plans || '';
+}
+function openProjectDetail(id) {
+  currentDetailId = id;
+  document.getElementById('log-date').value = TODAY;
+  document.getElementById('td-date').value = TODAY;
+  renderProjectDetail(); switchView('project');
+}
+function closeProjectDetail() { switchView(currentView); currentDetailId = null; }
+
+/* ============================================================
+   ▍视图切换与渲染
+   ============================================================ */
+let currentView = 'kanban';
+function switchView(view) {
+  if (view !== 'project') currentView = view;
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.view === view));
+  document.getElementById('view-kanban').style.display   = view==='kanban'  ? '' : 'none';
+  document.getElementById('view-gantt').style.display   = view==='gantt'   ? '' : 'none';
+  document.getElementById('view-calendar').style.display = view==='calendar'? '' : 'none';
+  document.getElementById('view-project').style.display  = view==='project' ? '' : 'none';
+}
+function renderAll() { renderSidebar(); renderKanban(); renderGantt(); renderCalendar(); renderDistribution(); }
+
+/* ============================================================
+   ▍初始化
+   ============================================================ */
+initCal();
+renderAll();
+document.querySelectorAll('.nav-item').forEach(el => el.addEventListener('click', () => switchView(el.dataset.view)));
+
+// 保存能力提示
+(function () {
+  const note = document.getElementById('autosaveNote');
+  if (note) note.textContent = storageOK
+    ? '⚡ 自动保存已开启 · 关闭或刷新后数据不丢'
+    : '⚠️ 当前环境无法持久化保存（数据仅本次会话有效）';
+})();
+
+function setupToggle(btnId, listId) {
+  const btn = document.getElementById(btnId), list = document.getElementById(listId);
+  btn.addEventListener('click', () => { const open = list.style.display !== 'none'; list.style.display = open ? 'none' : ''; btn.textContent = open ? '＋' : '－'; });
+}
+setupToggle('ipToggle', 'inProgress');
+setupToggle('doneToggle', 'completed');
+
+['inProgress', 'completed'].forEach(id => {
+  document.getElementById(id).addEventListener('click', e => {
+    const del = e.target.closest('.del');
+    if (del) { removeProject(Number(del.dataset.id)); return; }
+    const item = e.target.closest('.ip-item');
+    if (item) openProjectDetail(Number(item.dataset.id));
+  });
+});
+document.getElementById('gantt').addEventListener('click', e => {
+  const t = e.target.closest('[data-pid]');
+  if (t) openProjectDetail(Number(t.dataset.pid));
+});
+
+document.getElementById('exportBtn').addEventListener('click', exportData);
+document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change', e => { if (e.target.files[0]) importData(e.target.files[0]); e.target.value = ''; });
+
+(function () {
+  const mask = document.getElementById('modal');
+  document.getElementById('np-color').innerHTML = PALETTE.map(c => `<option value="${c.key}">${c.label} ${c.emoji}</option>`).join('');
+  document.getElementById('np-stage').innerHTML = STATUSES.map(s => `<option value="${s.key}">${s.label}</option>`).join('');
+
+  document.getElementById('addProjBtn').addEventListener('click', () => {
+    document.getElementById('np-start').value = TODAY;
+    const e = new Date(parseDate(TODAY)); e.setDate(e.getDate() + 30);
+    document.getElementById('np-end').value = fmtDate(e);
+    document.getElementById('np-stage').value = 'design';
+    mask.style.display = 'flex'; document.getElementById('np-name').focus();
+  });
+  document.getElementById('np-cancel').addEventListener('click', () => mask.style.display = 'none');
+  mask.addEventListener('click', e => { if (e.target === mask) mask.style.display = 'none'; });
+  document.getElementById('np-save').addEventListener('click', () => {
+    const name = document.getElementById('np-name').value.trim();
+    const start = document.getElementById('np-start').value;
+    const end = document.getElementById('np-end').value;
+    if (!name) { alert('请输入项目名称'); return; }
+    if (!start || !end) { alert('请填写起止日期'); return; }
+    const c = PALETTE.find(x => x.key === document.getElementById('np-color').value) || PALETTE[0];
+    PROJECTS.push({ id: nextId++, name, emoji: c.emoji, color: c.color,
+      status: document.getElementById('np-stage').value,
+      nextAction: document.getElementById('np-next').value.trim(), progress: 0,
+      start, end, milestones: [], logs: [], todos: [], notes: '', plans: '' });
+    mask.style.display = 'none'; document.getElementById('np-name').value = ''; document.getElementById('np-next').value = '';
+    saveProjects(); renderAll();
+    document.getElementById('inProgress').style.display = ''; document.getElementById('ipToggle').textContent = '－';
+  });
+})();
+
+document.getElementById('detailBack').addEventListener('click', closeProjectDetail);
+document.getElementById('detailStages').addEventListener('click', e => {
+  const btn = e.target.closest('.stage-btn'); if (!btn) return;
+  const p = getProject(currentDetailId); if (!p) return;
+  p.status = btn.dataset.status; saveProjects(); renderAll(); renderProjectDetail();
+});
+document.getElementById('log-add').addEventListener('click', () => {
+  const p = getProject(currentDetailId); if (!p) return;
+  const text = document.getElementById('log-text').value.trim();
+  const date = document.getElementById('log-date').value;
+  if (!text) { alert('请输入记录内容'); return; }
+  if (!date) { alert('请选择日期'); return; }
+  p.logs = p.logs || [];
+  p.logs.push({ id: ++nodeSeq, date, type: '', text });
+  document.getElementById('log-text').value = '';
+  saveProjects(); renderProjectDetail();
+});
+
+// 完成事项：勾选 → 进度联动 + 全部完成自动标记
+document.getElementById('todoList').addEventListener('change', e => {
+  const cb = e.target.closest('input[data-tid]'); if (!cb) return;
+  const p = getProject(currentDetailId); const t = (p.todos||[]).find(x => x.id === Number(cb.dataset.tid));
+  if (t) {
+    t.done = cb.checked;
+    const before = p.status;
+    recalcProgress(p);
+    if (before !== 'completed' && p.status === 'completed') alert(`🎉「${p.name}」所有事项已完成，已标记为已完成`);
+    saveProjects(); renderAll(); renderProjectDetail();
+  }
+});
+
+// 完成事项：编辑 / 删除
+document.getElementById('todoList').addEventListener('click', e => {
+  const p = getProject(currentDetailId); if (!p) return;
+  const save = e.target.closest('[data-edsave="todo"]');
+  if (save) { saveTodoEdit(p, save.dataset.id); return; }
+  if (e.target.closest('[data-edcancel]')) { editingTodo = null; renderProjectDetail(); return; }
+  const del = e.target.closest('[data-del="todo"]');
+  if (del) { p.todos = (p.todos||[]).filter(x => x.id !== Number(del.dataset.id)); editingTodo = null; recalcProgress(p); saveProjects(); renderAll(); renderProjectDetail(); return; }
+  const edit = e.target.closest('[data-edit="todo"]');
+  if (edit) { editingTodo = Number(edit.dataset.id); renderProjectDetail(); return; }
+});
+function saveTodoEdit(p, id) {
+  const t = (p.todos||[]).find(x => x.id === Number(id)); if (!t) return;
+  const title = document.getElementById('ed-td-title').value.trim();
+  const date = document.getElementById('ed-td-date').value;
+  if (!title) { alert('请输入事项名称'); return; }
+  t.title = title; t.date = date;
+  editingTodo = null; saveProjects(); renderProjectDetail();
+}
+
+// 项目时间线：勾选 = 该节点完成 → 进度 / 日历 / 甘特 / 看板同步
+document.getElementById('logList').addEventListener('change', e => {
+  const cb = e.target.closest('input[data-lid]'); if (!cb) return;
+  const p = getProject(currentDetailId); if (!p) return;
+  const l = (p.logs || []).find(x => x.id === Number(cb.dataset.lid));
+  if (!l) return;
+  l.done = cb.checked;
+  const before = p.status;
+  recalcProgress(p);
+  if (before !== 'completed' && p.status === 'completed') alert(`🎉「${p.name}」所有节点已完成，已标记为已完成`);
+  saveProjects(); renderAll(); renderProjectDetail();
+});
+
+// 项目时间线：编辑 / 删除
+document.getElementById('logList').addEventListener('click', e => {
+  const p = getProject(currentDetailId); if (!p) return;
+  const save = e.target.closest('[data-edsave="log"]');
+  if (save) { saveLogEdit(p, save.dataset.id); return; }
+  if (e.target.closest('[data-edcancel]')) { editingLog = null; renderProjectDetail(); return; }
+  const del = e.target.closest('[data-del="log"]');
+  if (del) { p.logs = (p.logs||[]).filter(x => x.id !== Number(del.dataset.id)); editingLog = null; saveProjects(); renderProjectDetail(); return; }
+  const edit = e.target.closest('[data-edit="log"]');
+  if (edit) { editingLog = Number(edit.dataset.id); renderProjectDetail(); return; }
+});
+function saveLogEdit(p, id) {
+  const l = (p.logs||[]).find(x => x.id === Number(id)); if (!l) return;
+  const text = document.getElementById('ed-lg-text').value.trim();
+  const date = document.getElementById('ed-lg-date').value;
+  if (!text) { alert('请输入记录内容'); return; }
+  l.text = text; l.date = date;
+  editingLog = null; saveProjects(); renderProjectDetail();
+}
+
+document.getElementById('td-add').addEventListener('click', () => {
+  const p = getProject(currentDetailId); if (!p) return;
+  const title = document.getElementById('td-title').value.trim();
+  const date = document.getElementById('td-date').value;
+  if (!title) { alert('请输入事项名称'); return; }
+  if (!date) { alert('请选择日期'); return; }
+  p.todos = p.todos || [];
+  p.todos.push({ id: ++nodeSeq, date, title, done: false });
+  document.getElementById('td-title').value = '';
+  recalcProgress(p); saveProjects(); renderAll(); renderProjectDetail();
+});
+document.getElementById('detailNotes').addEventListener('change', e => { const p = getProject(currentDetailId); if (p) { p.notes = e.target.value; saveProjects(); } });
+document.getElementById('detailPlans').addEventListener('change', e => { const p = getProject(currentDetailId); if (p) { p.plans = e.target.value; saveProjects(); } });
+
+/* ============================================================
+   ▍自动保存（退出 / 切后台时兜底落盘）
+   ============================================================ */
+function flushDetail() {
+  if (!currentDetailId) return;
+  const p = getProject(currentDetailId); if (!p) return;
+  const n = document.getElementById('detailNotes');
+  const pl = document.getElementById('detailPlans');
+  if (n) p.notes = n.value;
+  if (pl) p.plans = pl.value;
+  saveProjects();
+}
+window.addEventListener('beforeunload', flushDetail);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushDetail(); });
+</script>
+</body>
+</html>
